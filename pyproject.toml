@@ -3,7 +3,7 @@ name = "pdf2md"
 version = "0.1.0"
 description = "CLI tool to convert lecture slides in PDF format into clean Markdown"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "pymupdf>=2.2",
     "pymupdf4llm>=2.2",
