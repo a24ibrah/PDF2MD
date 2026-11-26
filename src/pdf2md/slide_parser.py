@@ -13,7 +13,7 @@ BULLET_REGEX = re.compile(r"^[\s\u2022\u25cf\u25cb\u25aa\u25ab\u2013\u2014\*\+\â
 NUMBERED_LIST_REGEX = re.compile(r"^\s*(\d+[\.\)]|\([a-zA-Z0-9]+\)|[a-zA-Z][\.\)])\s+")
 
 MONOSPACE_FONTS = {
-    "courier", "consolas", "monaco", "menlo", "source code", "fira code",
+    "courier", "cour", "consolas", "monaco", "menlo", "source code", "fira code",
     "dejavu sans mono", "ubuntu mono", "roboto mono", "jetbrains", "monospace"
 }
 
