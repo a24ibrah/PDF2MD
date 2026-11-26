@@ -9,7 +9,9 @@ from .tables import extract_tables_from_page
 from .images import extract_embedded_images, render_slide_image
 from .ocr import ocr_page
 
-BULLET_REGEX = re.compile(r"^[\s\u2022\u25cf\u25cb\u25aa\u25ab\u2013\u2014\*\+\›\▸\►\■\❑\➢\-]\s*")
+BULLET_REGEX = re.compile(
+    r"^[\s\u2022\u25cf\u25cb\u25aa\u25ab\u2013\u2014\*\+\›\▸\►\■\❑\➢\-\u00b7\u25e6\u2043\u2219\u2023]\s*"
+)
 NUMBERED_LIST_REGEX = re.compile(r"^\s*(\d+[\.\)]|\([a-zA-Z0-9]+\)|[a-zA-Z][\.\)])\s+")
 
 MONOSPACE_FONTS = {
@@ -201,67 +203,77 @@ def parse_slide(
 
     # 7. Multi-column Layout Detection
     # Determine if body blocks are arranged in 2 columns
-    left_col = []
-    right_col = []
     mid_x = page_width * 0.5
-    has_two_cols = False
-
-    # Check if there are distinct left and right column clusters
     col_split_x = mid_x
     left_blocks = [b for b in body_blocks if b["bbox"][2] <= col_split_x + 30]
     right_blocks = [b for b in body_blocks if b["bbox"][0] >= col_split_x - 30]
 
-    if len(left_blocks) >= 1 and len(right_blocks) >= 1 and (len(left_blocks) + len(right_blocks) >= len(body_blocks) * 0.8):
-        # Good candidate for multi-column layout
+    column_groups = []
+    if (
+        len(left_blocks) >= 1
+        and len(right_blocks) >= 1
+        and (len(left_blocks) + len(right_blocks) >= len(body_blocks) * 0.8)
+    ):
         left_blocks.sort(key=lambda b: (b["bbox"][1], b["bbox"][0]))
         right_blocks.sort(key=lambda b: (b["bbox"][1], b["bbox"][0]))
-        ordered_blocks = left_blocks + right_blocks
+        column_groups = [left_blocks, right_blocks]
     else:
-        # Single column or top-down flow: sort by y0, then x0
-        ordered_blocks = sorted(body_blocks, key=lambda b: (b["bbox"][1], b["bbox"][0]))
+        sorted_all = sorted(body_blocks, key=lambda b: (b["bbox"][1], b["bbox"][0]))
+        column_groups = [sorted_all]
 
-    # 8. Process Body Blocks (Bullets, Indents, Code, Math)
-    base_x0 = min((b["bbox"][0] for b in body_blocks), default=0.0)
-
-    for block in ordered_blocks:
-        if block.get("is_code"):
-            code_text = block["text"]
-            content.body_elements.append(f"```text\n{code_text}\n```")
+    # 8. Process Body Blocks within each Column Group
+    for group_idx, group_blocks in enumerate(column_groups):
+        if not group_blocks:
             continue
 
-        raw_block = block.get("raw_block", {})
-        lines = raw_block.get("lines", [])
+        group_base_x0 = min((b["bbox"][0] for b in group_blocks), default=0.0)
 
-        # Process line by line within block
-        for line in lines:
-            spans = line.get("spans", [])
-            line_str = "".join(s.get("text", "") for s in spans).strip()
-            if not line_str:
+        for block in group_blocks:
+            if block.get("is_code"):
+                code_text = block["text"]
+                content.body_elements.append(f"```text\n{code_text}\n```")
                 continue
 
-            # Check if line itself is a repeated footer or page number
-            if not keep_footers and is_page_number_string(line_str):
-                continue
+            raw_block = block.get("raw_block", {})
+            lines = raw_block.get("lines", [])
 
-            line_x0 = line.get("bbox", (0, 0, 0, 0))[0]
-            indent_delta = max(0.0, line_x0 - base_x0)
+            for line in lines:
+                spans = line.get("spans", [])
+                line_str = "".join(s.get("text", "") for s in spans).strip()
+                if not line_str:
+                    continue
 
-            # Determine markdown bullet indentation
-            if indent_delta < 20:
-                indent = ""
-            elif indent_delta < 45:
-                indent = "  "
-            else:
-                indent = "    "
+                # Check if line itself is a repeated footer or page number
+                if not keep_footers:
+                    if is_page_number_string(line_str):
+                        continue
+                    norm_line = re.sub(r"\s+", " ", line_str).strip().lower()
+                    if norm_line in repeated_headers_footers:
+                        continue
 
-            # Check if line already has a bullet or number
-            if BULLET_REGEX.match(line_str):
-                cleaned = BULLET_REGEX.sub("", line_str).strip()
-                content.body_elements.append(f"{indent}- {cleaned}")
-            elif NUMBERED_LIST_REGEX.match(line_str):
-                content.body_elements.append(f"{indent}{line_str}")
-            else:
-                # If short or standard slide line, format as bullet
-                content.body_elements.append(f"{indent}- {line_str}")
+                line_x0 = line.get("bbox", (0, 0, 0, 0))[0]
+                indent_delta = max(0.0, line_x0 - group_base_x0)
+
+                # Determine markdown bullet indentation relative to this column
+                if indent_delta < 20:
+                    indent = ""
+                elif indent_delta < 45:
+                    indent = "  "
+                else:
+                    indent = "    "
+
+                # If the line ends with a colon and has no bullet (e.g. "Advantages:"), treat as subheader
+                if line_str.endswith(":") and not BULLET_REGEX.match(line_str) and not NUMBERED_LIST_REGEX.match(line_str):
+                    content.body_elements.append(f"\n{indent}**{line_str}**")
+                    continue
+
+                # Check if line already has a bullet or number
+                if BULLET_REGEX.match(line_str):
+                    cleaned = BULLET_REGEX.sub("", line_str).strip()
+                    content.body_elements.append(f"{indent}- {cleaned}")
+                elif NUMBERED_LIST_REGEX.match(line_str):
+                    content.body_elements.append(f"{indent}{line_str}")
+                else:
+                    content.body_elements.append(f"{indent}- {line_str}")
 
     return content

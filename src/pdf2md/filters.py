@@ -55,13 +55,21 @@ def detect_repeated_headers_and_footers(
 
             y0, y1 = b[1], b[3]
 
-            # Normalize text for counting
-            norm_text = re.sub(r"\s+", " ", text).strip().lower()
+            # Normalize both full block text and individual lines for counting
+            lines_in_block = [line.strip() for line in text.splitlines() if line.strip()]
+            for line in lines_in_block:
+                norm_line = re.sub(r"\s+", " ", line).strip().lower()
+                if y1 <= top_limit:
+                    header_counter[norm_line] += 1
+                elif y0 >= bottom_limit:
+                    footer_counter[norm_line] += 1
 
-            if y1 <= top_limit:
-                header_counter[norm_text] += 1
-            elif y0 >= bottom_limit:
-                footer_counter[norm_text] += 1
+            if len(lines_in_block) > 1:
+                norm_full = re.sub(r"\s+", " ", text).strip().lower()
+                if y1 <= top_limit:
+                    header_counter[norm_full] += 1
+                elif y0 >= bottom_limit:
+                    footer_counter[norm_full] += 1
 
     threshold = max(2, int(total_pages * min_repeat_ratio))
     repeated = set()
