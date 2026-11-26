@@ -20,23 +20,37 @@ Unlike generic document converters, **PDF2MD** is tailored specifically for the 
 
 ## Installation
 
-Using [uv](https://docs.astral.sh/uv/) (recommended):
+Requires Python 3.11+.
+
+**Install as a global command** with [uv](https://docs.astral.sh/uv/) (recommended):
 
 ```bash
-# Clone or navigate to the directory
-cd PDF2MD
-
-# Run directly without installation
-uv run pdf2md --help
-
-# Or install in editable mode
-uv pip install -e .
+uv tool install git+https://github.com/GITHUB_USER/REPO_NAME
 ```
 
-Using standard `pip`:
+Or with [pipx](https://pipx.pypa.io/):
 
 ```bash
-pip install -e .
+pipx install git+https://github.com/GITHUB_USER/REPO_NAME
+```
+
+Then run `pdf2md --help` from anywhere.
+
+**Optional: OCR for scanned slides.** Install the Tesseract engine:
+
+```bash
+brew install tesseract          # macOS
+sudo apt install tesseract-ocr  # Debian/Ubuntu
+```
+
+Without Tesseract, everything else works and OCR is skipped.
+
+**For development:**
+
+```bash
+git clone https://github.com/GITHUB_USER/REPO_NAME
+cd REPO_NAME
+uv run pdf2md --help
 ```
 
 ---
@@ -151,3 +165,9 @@ Run the included unit test suite:
 ```bash
 uv run python -m unittest tests/test_converter.py
 ```
+
+---
+
+## License
+
+[MIT](LICENSE) © Ahmed Ibrahim

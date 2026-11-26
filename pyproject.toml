@@ -3,10 +3,18 @@ name = "pdf2md"
 version = "0.1.0"
 description = "CLI tool to convert lecture slides in PDF format into clean Markdown"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Ahmed Ibrahim" }]
 requires-python = ">=3.11"
+keywords = ["pdf", "markdown", "slides", "lecture", "converter", "cli"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Environment :: Console",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
 dependencies = [
-    "pymupdf>=2.2",
-    "pymupdf4llm>=2.2",
+    "pymupdf>=1.24",
     "pillow>=10.0.0",
     "pytesseract>=0.3.10",
 ]

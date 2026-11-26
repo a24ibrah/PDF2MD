@@ -8,3 +8,11 @@ wheels/
 
 # Virtual environments
 .venv
+
+# macOS
+.DS_Store
+
+# Conversion outputs from local testing
+slides/
+images/
+slides_md/
