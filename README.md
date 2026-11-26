@@ -25,13 +25,13 @@ Requires Python 3.11+.
 **Install as a global command** with [uv](https://docs.astral.sh/uv/) (recommended):
 
 ```bash
-uv tool install git+https://github.com/GITHUB_USER/REPO_NAME
+uv tool install git+https://github.com/a24ibrah/PDF2MD
 ```
 
 Or with [pipx](https://pipx.pypa.io/):
 
 ```bash
-pipx install git+https://github.com/GITHUB_USER/REPO_NAME
+pipx install git+https://github.com/a24ibrah/PDF2MD
 ```
 
 Then run `pdf2md --help` from anywhere.
@@ -48,8 +48,8 @@ Without Tesseract, everything else works and OCR is skipped.
 **For development:**
 
 ```bash
-git clone https://github.com/GITHUB_USER/REPO_NAME
-cd REPO_NAME
+git clone https://github.com/a24ibrah/PDF2MD
+cd PDF2MD
 uv run pdf2md --help
 ```
 
